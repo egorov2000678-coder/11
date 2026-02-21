@@ -19,11 +19,20 @@ from bot.models import Base
 from config import load_settings
 
 
+def _sslmode_to_asyncpg_ssl(sslmode: str) -> bool:
+    value = sslmode.strip().lower()
+    return value not in {"disable", "allow", "prefer"}
+
+
 async def main() -> None:
     settings = load_settings()
     logging.basicConfig(level=getattr(logging, settings.log_level, logging.INFO))
 
-    engine = create_async_engine(settings.database_url, future=True)
+    engine_kwargs: dict[str, object] = {"future": True}
+    if settings.database_sslmode is not None:
+        # asyncpg does not accept sslmode in DSN query; pass as connect arg instead.
+        engine_kwargs["connect_args"] = {"ssl": _sslmode_to_asyncpg_ssl(settings.database_sslmode)}
+    engine = create_async_engine(settings.database_url, **engine_kwargs)
     session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with engine.begin() as conn:
