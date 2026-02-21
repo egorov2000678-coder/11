@@ -14,7 +14,6 @@ class Settings:
     log_level: str
 
 
-
 def _parse_admins(raw: str) -> set[int]:
     result: set[int] = set()
     for value in raw.split(","):
@@ -24,7 +23,6 @@ def _parse_admins(raw: str) -> set[int]:
         if value.lstrip("-").isdigit():
             result.add(int(value))
     return result
-
 
 
 def load_settings() -> Settings:
